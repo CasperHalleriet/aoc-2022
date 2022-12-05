@@ -139,7 +139,12 @@ class CrateMover9000 : CrateMover() {
     override fun executeInstruction(instruction: Instruction) {
         val from = stacks[instruction.from - 1]
         val to = stacks[instruction.to - 1]
-
+        for (amount in 0 until instruction.move) {
+            val char = from.removeLastOrNull()
+            if(char != null) {
+                to.add(char)
+            }
+        }
     }
 }
 
@@ -156,7 +161,6 @@ class CrateMover9001: CrateMover() {
             }
         }
         to.addAll(moveables)
-        println(moveables)
     }
 
 }
