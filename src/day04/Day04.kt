@@ -91,7 +91,7 @@ class Day04 : Day {
     private fun IntRange.isInRange(range: IntRange): Boolean {
         return this.first >= range.first && this.last <= range.last
     }
-    
+
     private fun IntRange.hasOverlapWith(range: IntRange): Boolean {
         return range.first in this || range.last in this
     }
