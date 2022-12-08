@@ -43,6 +43,32 @@ fun <T> AoCGrid<T>.getNewCoordinate(coordinate: Coordinate, direction: Direction
     return if(newY < this.size && newX < this[0].size && newX >= 0 && newY >= 0) Coordinate(newX, newY) else null
 }
 
+fun <T> AoCGrid<T>.getAllValuesInDirection(coordinate: Coordinate, direction: Direction): List<T>? {
+    return when(direction) {
+        Direction.BottomCenter -> {
+            ((coordinate.y +1)..maxY()).mapNotNull { y ->
+                getValue(Coordinate(coordinate.x, y))
+            }
+        }
+        Direction.MidLeft -> {
+            (coordinate.x - 1 downTo  0).mapNotNull { x ->
+                getValue(Coordinate(x, coordinate.y))
+            }
+        }
+        Direction.MidRight -> {
+            ((coordinate.x + 1)..maxX()).mapNotNull { x ->
+                getValue(Coordinate(x, coordinate.y))
+            }
+        }
+        Direction.TopCenter -> {
+            (coordinate.y -1 downTo 0).mapNotNull { y ->
+                getValue(Coordinate(coordinate.x, y))
+            }
+        }
+        else -> null
+    }
+}
+
 fun <T> AoCGrid<T>.mutateValue(coordinate: Coordinate, block: (T) -> T) {
     this[coordinate.y][coordinate.x] = block(this[coordinate.y][coordinate.x])
 }
@@ -54,6 +80,14 @@ fun <T> AoCGrid<T>.cellsIndexed(block: (T, Coordinate) -> Unit) {
             block(value, coordinate)
         }
     }
+}
+
+fun <T> AoCGrid<T>.maxX(): Int {
+    return this.lastIndex
+}
+
+fun <T> AoCGrid<T>.maxY(): Int {
+    return firstOrNull()?.lastIndex ?: 0
 }
 
 fun <T> AoCGrid<T>.print(delimiter: String = ",") {

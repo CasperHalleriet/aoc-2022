@@ -1,62 +1,99 @@
 package day07
 
 import Day
-import kotlin.math.abs
 
 /*
---- Day 7: The Treachery of Whales ---
-A giant whale has decided your submarine is its next meal, and it's much faster than you are. There's nowhere to run!
+--- Day 7: No Space Left On Device ---
+You can hear birds chirping and raindrops hitting leaves as the expedition proceeds. Occasionally, you can even hear much louder sounds in the distance; how big do the animals get out here, anyway?
 
-Suddenly, a swarm of crabs (each in its own tiny submarine - it's too deep for them otherwise) zooms in to rescue you! They seem to be preparing to blast a hole in the ocean floor; sensors indicate a massive underground cave system just beyond where they're aiming!
+The device the Elves gave you has problems with more than just its communication system. You try to run a system update:
 
-The crab submarines all need to be aligned before they'll have enough power to blast a large enough hole for your submarine to get through. However, it doesn't look like they'll be aligned before the whale catches you! Maybe you can help?
+$ system-update --please --pretty-please-with-sugar-on-top
+Error: No space left on device
+Perhaps you can delete some files to make space for the update?
 
-There's one major catch - crab submarines can only move horizontally.
+You browse around the filesystem to assess the situation and save the resulting terminal output (your puzzle input). For example:
 
-You quickly make a list of the horizontal position of each crab (your puzzle input). Crab submarines have limited fuel, so you need to find a way to make all of their horizontal positions match while requiring them to spend as little fuel as possible.
+$ cd /
+$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k
+The filesystem consists of a tree of files (plain data) and directories (which can contain other directories or files). The outermost directory is called /. You can navigate around the filesystem, moving into or out of directories and listing the contents of the directory you're currently in.
 
-For example, consider the following horizontal positions:
+Within the terminal output, lines that begin with $ are commands you executed, very much like some modern computers:
 
-16,1,2,0,4,2,7,1,2,14
-This means there's a crab with horizontal position 16, a crab with horizontal position 1, and so on.
+cd means change directory. This changes which directory is the current directory, but the specific result depends on the argument:
+cd x moves in one level: it looks in the current directory for the directory named x and makes it the current directory.
+cd .. moves out one level: it finds the directory that contains the current directory, then makes that directory the current directory.
+cd / switches the current directory to the outermost directory, /.
+ls means list. It prints out all of the files and directories immediately contained by the current directory:
+123 abc means that the current directory contains a file named abc with size 123.
+dir xyz means that the current directory contains a directory named xyz.
+Given the commands and output in the example above, you can determine that the filesystem looks visually like this:
 
-Each change of 1 step in horizontal position of a single crab costs 1 fuel. You could choose any horizontal position to align them all on, but the one that costs the least fuel is horizontal position 2:
+- / (dir)
+  - a (dir)
+    - e (dir)
+      - i (file, size=584)
+    - f (file, size=29116)
+    - g (file, size=2557)
+    - h.lst (file, size=62596)
+  - b.txt (file, size=14848514)
+  - c.dat (file, size=8504156)
+  - d (dir)
+    - j (file, size=4060174)
+    - d.log (file, size=8033020)
+    - d.ext (file, size=5626152)
+    - k (file, size=7214296)
+Here, there are four directories: / (the outermost directory), a and d (which are in /), and e (which is in a). These directories also contain files of various sizes.
 
-Move from 16 to 2: 14 fuel
-Move from 1 to 2: 1 fuel
-Move from 2 to 2: 0 fuel
-Move from 0 to 2: 2 fuel
-Move from 4 to 2: 2 fuel
-Move from 2 to 2: 0 fuel
-Move from 7 to 2: 5 fuel
-Move from 1 to 2: 1 fuel
-Move from 2 to 2: 0 fuel
-Move from 14 to 2: 12 fuel
-This costs a total of 37 fuel. This is the cheapest possible outcome; more expensive outcomes include aligning at position 1 (41 fuel), position 3 (39 fuel), or position 10 (71 fuel).
+Since the disk is full, your first step should probably be to find directories that are good candidates for deletion. To do this, you need to determine the total size of each directory. The total size of a directory is the sum of the sizes of the files it contains, directly or indirectly. (Directories themselves do not count as having any intrinsic size.)
 
-Determine the horizontal position that the crabs can align to using the least fuel possible. How much fuel must they spend to align to that position?
+The total sizes of the directories above can be found as follows:
+
+The total size of directory e is 584 because it contains a single file i of size 584 and no other directories.
+The directory a has total size 94853 because it contains files f (size 29116), g (size 2557), and h.lst (size 62596), plus file i indirectly (a contains e which contains i).
+Directory d has total size 24933642.
+As the outermost directory, / contains every file. Its total size is 48381165, the sum of the size of every file.
+To begin, find all of the directories with a total size of at most 100000, then calculate the sum of their total sizes. In the example above, these directories are a and e; the sum of their total sizes is 95437 (94853 + 584). (As in this example, this process can count files more than once!)
+
+Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?
 
 --- Part Two ---
-The crabs don't seem interested in your proposed solution. Perhaps you misunderstand crab engineering?
+Now, you're ready to choose a directory to delete.
 
-As it turns out, crab submarine engines don't burn fuel at a constant rate. Instead, each change of 1 step in horizontal position costs 1 more unit of fuel than the last: the first step costs 1, the second step costs 2, the third step costs 3, and so on.
+The total disk space available to the filesystem is 70000000. To run the update, you need unused space of at least 30000000. You need to find a directory you can delete that will free up enough space to run the update.
 
-As each crab moves, moving further becomes more expensive. This changes the best horizontal position to align them all on; in the example above, this becomes 5:
+In the example above, the total size of the outermost directory (and thus the total amount of used space) is 48381165; this means that the size of the unused space must currently be 21618835, which isn't quite the 30000000 required by the update. Therefore, the update still requires a directory with total size of at least 8381165 to be deleted before it can run.
 
-Move from 16 to 5: 66 fuel
-Move from 1 to 5: 10 fuel
-Move from 2 to 5: 6 fuel
-Move from 0 to 5: 15 fuel
-Move from 4 to 5: 1 fuel
-Move from 2 to 5: 6 fuel
-Move from 7 to 5: 3 fuel
-Move from 1 to 5: 10 fuel
-Move from 2 to 5: 6 fuel
-Move from 14 to 5: 45 fuel
-This costs a total of 168 fuel. This is the new cheapest possible outcome; the old alignment position (2) now costs 206 fuel instead.
+To achieve this, you have the following options:
 
-Determine the horizontal position that the crabs can align to using the least fuel possible so they can make you an escape route! How much fuel must they spend to align to that position?
+Delete directory e, which would increase unused space by 584.
+Delete directory a, which would increase unused space by 94853.
+Delete directory d, which would increase unused space by 24933642.
+Delete directory /, which would increase unused space by 48381165.
+Directories e and a are both too small; deleting them would not free up enough space. However, directories d and / are both big enough! Between these, choose the smallest: d, increasing unused space by 24933642.
 
+Find the smallest directory that, if deleted, would free up enough space on the filesystem to run the update. What is the total size of that directory?
  */
 fun main() {
     val day = Day07()
@@ -64,12 +101,223 @@ fun main() {
     day.run()
 }
 
-class Day07: Day {
+class Day07 : Day {
     override fun part1(input: List<String>): Int {
-        return -1
+        val files = createFileStructure(input)
+        val dirs = files.findChildDirsRecursive()
+        return dirs.sumOf { if(it.size() < 100000) it.size() else 0 }
     }
 
     override fun part2(input: List<String>): Int {
-        return -1
+        val totalStorage = 70000000
+        val neededStorage = 30000000
+        val files = createFileStructure(input)
+        val remainingStorage = totalStorage - files.size()
+        val storageToClear = neededStorage - remainingStorage
+
+        val dirs = files.findChildDirsRecursive()
+        var dirToDelete: File.Dir? = null
+        dirs.forEach { dir ->
+            if(dir.size() > storageToClear && dir.size() < (dirToDelete?.size() ?: Int.MAX_VALUE)) {
+                dirToDelete = dir
+            }
+        }
+        println("Should delete dir: ${dirToDelete?.name}")
+        return dirToDelete?.size() ?: -1
+    }
+
+    private fun createFileStructure(input: List<String>): File.Dir {
+        val root = File.Dir("/")
+        var curDir: File.Dir? = null
+        val commands = Command.fromInput(input)
+        commands.forEach { command ->
+            when (command) {
+                is Command.CD.Into -> {
+                    curDir?.openDirectory(command.into)?.also {
+                        curDir = it
+                    }
+                }
+
+                Command.CD.Out -> {
+                    curDir?.close()?.also {
+                        curDir = it
+                    }
+                }
+
+                is Command.LS -> {
+                    command.getOutput().forEach { output ->
+                        when (output) {
+                            is Command.LS.Output.Dir -> {
+                                curDir?.addDirectory(output.name)
+                            }
+
+                            is Command.LS.Output.File -> {
+                                curDir?.addDataFile(output.name, output.size)
+                            }
+                        }
+                    }
+                }
+
+                Command.CD.Root -> {
+                    curDir = root
+                }
+            }
+        }
+        return root
     }
 }
+
+sealed interface Command {
+    sealed interface CD : Command {
+        class Into(val into: String) : CD
+        object Out : CD
+        object Root : CD
+    }
+
+    class LS : Command {
+        private val outputs = mutableListOf<Output>()
+
+        fun addOutput(output: Output) {
+            outputs.add(output)
+        }
+
+        fun getOutput(): List<Output> {
+            return outputs
+        }
+
+        sealed interface Output {
+            class File(val size: Int, val name: String) : Output
+            class Dir(val name: String) : Output
+        }
+    }
+
+    companion object {
+        fun fromInput(input: List<String>): List<Command> {
+            val commands = mutableListOf<Command>()
+            input.forEach {
+                if (it.startsWith("$")) {
+                    val args = it.split(" ")
+                    if (args[1] == "cd") {
+                        val command = when (val string = args[2]) {
+                            ".." -> CD.Out
+                            "/" -> CD.Root
+                            else -> CD.Into(string)
+                        }
+                        commands.add(command)
+                    } else if (args[1] == "ls") {
+                        commands.add(LS())
+                    }
+                } else {
+                    val output = it.split(" ")
+                    val parsedOutput: LS.Output = if (output[0].toIntOrNull() != null) {
+                        LS.Output.File(output[0].toInt(), output[1])
+                    } else {
+                        LS.Output.Dir(output[1])
+                    }
+                    (commands.lastOrNull() as? LS)?.addOutput(parsedOutput)
+                }
+            }
+
+            return commands
+        }
+    }
+}
+
+sealed interface File {
+    val name: String
+
+    fun toString(indentations: Int): String
+
+    fun asJsonString(indentations: Int): String
+
+    class Dir(override val name: String) : File {
+        private var parent: Dir? = null
+        private val files = mutableListOf<File>()
+
+        fun openDirectory(directoryName: String): Dir? {
+            return files.filterIsInstance<Dir>().find { it.name == directoryName }
+        }
+
+        fun close(): Dir? {
+            return parent
+        }
+
+        fun addDataFile(name: String, size: Int) {
+            files.add(Data(name, size))
+        }
+
+        fun addDirectory(name: String) {
+            files.add(Dir(name).apply { parent = this@Dir })
+        }
+
+        fun size(): Int {
+            return files.sumOf {
+                when (it) {
+                    is Data -> it.size
+                    is Dir -> it.size()
+                }
+            }
+        }
+
+        fun getDirs(): List<Dir> {
+            return files.filterIsInstance<Dir>()
+        }
+
+        fun findChildDirsRecursive(): List<Dir> {
+            val dirs = mutableListOf<Dir>()
+            dirs.add(this)
+            this.getDirs().forEach {
+                dirs.addAll(it.findChildDirsRecursive())
+            }
+            return dirs
+        }
+
+        override fun toString(indentations: Int): String {
+            val builder = StringBuilder()
+            val indent = (0..indentations).joinToString(separator = "") { "\t" }
+            builder.append("$indent - $name (dir)")
+            files.forEach {
+                builder.appendLine()
+                builder.append(it.toString(indentations + 1))
+            }
+            return builder.toString()
+        }
+
+        override fun asJsonString(indentations: Int): String {
+            val builder = StringBuilder()
+            builder.append(
+                "{ " +
+                        "\"name\": \"$name\"," +
+                        "\"files\": ["
+            )
+            files.forEach {
+                builder.append(it.asJsonString(0))
+            }
+            builder.append("]" + "},")
+            return builder.toString()
+        }
+    }
+
+    class Data(override val name: String, val size: Int) : File {
+        override fun toString(indentations: Int): String {
+            val builder = StringBuilder()
+            val indent = (0..indentations).joinToString(separator = "") { "\t" }
+            builder.append("$indent - $name (file, size=$size)")
+            return builder.toString()
+        }
+
+        override fun asJsonString(indentations: Int): String {
+            val builder = StringBuilder()
+            builder.append(
+                "{ " +
+                        "\"name\": \"$name\"," +
+                        "\"size\": \"size\"," +
+                        "},"
+            )
+            return builder.toString()
+        }
+    }
+}
+
+
+
