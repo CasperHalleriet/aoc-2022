@@ -1,21 +1,3 @@
-package day09
-
-import Coordinate
-import Day
-import Direction
-import getNewCoordinate
-import java.lang.IllegalStateException
-import kotlin.math.abs
-
-
-fun main() {
-    val day = Day09()
-    day.runTest()
-    day.run()
-}
-
-
-/*
 --- Day 9: Rope Bridge ---
 This rope bridge creaks as you walk along it. You aren't sure how old it is, or whether it can even support your weight.
 
@@ -257,8 +239,9 @@ So, there are 13 positions the tail visited at least once.
 
 Simulate your complete hypothetical series of motions. How many positions does the tail of the rope visit at least once?
 
---- Part Two ---
+Your puzzle answer was 6339.
 
+--- Part Two ---
 A rope snaps! Suddenly, the river is getting a lot closer than you remember. The bridge is still there, but some of the ropes that broke are now whipping toward you as you fall through the air!
 
 The ropes are moving too quickly to grab; you only have a few seconds to choose how to arch your body to avoid being hit. Fortunately, your simulation can be extended to support longer ropes.
@@ -688,75 +671,3 @@ Now, the tail (9) visits 36 positions (including s) at least once:
 ........#........#........
 .........########.........
 Simulate your complete series of motions on a larger rope with ten knots. How many positions does the tail of the rope visit at least once?
- */
-class Day09 : Day {
-    override fun part1(input: List<String>): Int {
-        return input.findCoordinatesLastKnot(2).size
-    }
-
-    override fun part2(input: List<String>): Int {
-        return input.findCoordinatesLastKnot(10).size
-    }
-
-    private fun List<String>.findCoordinatesLastKnot(knotAmount: Int): Set<Coordinate> {
-        val lastKnotCoordinates = mutableSetOf(Coordinate(0, 0))
-        val knots = (1 until knotAmount).toList()
-        val currentCoordinates = buildMap {
-            this.putAll(knots.map { Pair(it, Coordinate(0, 0)) })
-            this[0] = Coordinate(0, 0)
-        }.toMutableMap()
-
-        this.map { instruction ->
-            val split = instruction.split(" ")
-            split[0] to split[1].toInt()
-        }.forEach { (directionString, amount) ->
-            for (step in 1 .. amount) {
-                val direction = when (directionString) {
-                    "U" -> Direction.TopCenter
-                    "R" -> Direction.MidRight
-                    "L" -> Direction.MidLeft
-                    "D" -> Direction.BottomCenter
-                    else -> throw Exception("Unknown command")
-                }
-                var headCoordinate = currentCoordinates.getValue(0)
-                headCoordinate = headCoordinate.getNewCoordinate(direction)
-                currentCoordinates[0] = headCoordinate
-
-                for(knot in knots) {
-                    val linkedKnot = currentCoordinates.getValue(knot - 1)
-                    val currentKnot = currentCoordinates.getValue(knot)
-                    val isConnected = currentKnot.isConnectedTo(linkedKnot)
-                    if(!isConnected) {
-                        val newPosition = currentKnot.getNewCoordinate(currentKnot.findDirectionTo(linkedKnot))
-                        currentCoordinates[knot] = newPosition
-                        if(knot == knots.last()) {
-                            lastKnotCoordinates.add(newPosition)
-                        }
-                    }
-                }
-            }
-        }
-        return lastKnotCoordinates
-    }
-}
-
-fun Coordinate.isConnectedTo(coordinate: Coordinate): Boolean {
-    val x = abs(this.x - coordinate.x)
-    val y = abs(this.y - coordinate.y)
-    return x <= 1 && y <= 1
-}
-
-fun Coordinate.findDirectionTo(coordinate: Coordinate): Direction {
-    return when {
-        this.x < coordinate.x && this.y < coordinate.y -> Direction.BottomRight
-        this.x < coordinate.x && this.y > coordinate.y -> Direction.TopRight
-        this.x < coordinate.x && this.y == coordinate.y -> Direction.MidRight
-        this.x > coordinate.x && this.y < coordinate.y -> Direction.BottomLeft
-        this.x > coordinate.x && this.y > coordinate.y -> Direction.TopLeft
-        this.x > coordinate.x && this.y == coordinate.y -> Direction.MidLeft
-        this.x == coordinate.x && this.y < coordinate.y -> Direction.BottomCenter
-        this.x == coordinate.x && this.y > coordinate.y -> Direction.TopCenter
-        this.x == coordinate.x && this.y == coordinate.y -> Direction.Relative(0,0)
-        else -> throw IllegalStateException("Should not end up here")
-    }
-}

@@ -1,6 +1,7 @@
 import java.lang.Integer.max
 
 typealias AoCGrid<T> = Array<Array<T>>
+
 fun createNumericGrid(input: List<String>): AoCGrid<Int> {
     return input.map { row ->
         row.map { it.digitToInt() }.toTypedArray()
@@ -14,12 +15,12 @@ inline fun <reified T> createGridFromCoordinates(coordinates: List<Coordinate>, 
         maxX = max(it.x, maxX)
         maxY = max(it.y, maxY)
     }
-    return createGrid(maxY +1, maxX + 1) {
+    return createGrid(maxY + 1, maxX + 1) {
         defValue
     }
 }
 
-inline fun <reified T> createGrid(rows: Int, columns: Int, initializer: (Coordinate) -> T) : AoCGrid<T> {
+inline fun <reified T> createGrid(rows: Int, columns: Int, initializer: (Coordinate) -> T): AoCGrid<T> {
     return AoCGrid(rows) { row ->
         Array(columns) { column ->
             initializer(Coordinate(column, row))
@@ -38,33 +39,42 @@ fun <T> AoCGrid<T>.getValueOrDefault(coordinate: Coordinate, default: T): T {
 data class Coordinate(val x: Int, val y: Int)
 
 fun <T> AoCGrid<T>.getNewCoordinate(coordinate: Coordinate, direction: Direction): Coordinate? {
-    val newX = coordinate.x + direction.xModifier
-    val newY = coordinate.y + direction.yModifier
-    return if(newY < this.size && newX < this[0].size && newX >= 0 && newY >= 0) Coordinate(newX, newY) else null
+    val newCoordinate = coordinate.getNewCoordinate(direction)
+    return if (newCoordinate.y < this.size && newCoordinate.x < this[0].size && newCoordinate.x >= 0 && newCoordinate.y >= 0) newCoordinate else null
+}
+
+fun Coordinate.getNewCoordinate(direction: Direction): Coordinate {
+    val newX = x + direction.xModifier
+    val newY = y + direction.yModifier
+    return Coordinate(newX, newY)
 }
 
 fun <T> AoCGrid<T>.getAllValuesInDirection(coordinate: Coordinate, direction: Direction): List<T>? {
-    return when(direction) {
+    return when (direction) {
         Direction.BottomCenter -> {
-            ((coordinate.y +1)..maxY()).mapNotNull { y ->
+            ((coordinate.y + 1)..maxY()).mapNotNull { y ->
                 getValue(Coordinate(coordinate.x, y))
             }
         }
+
         Direction.MidLeft -> {
-            (coordinate.x - 1 downTo  0).mapNotNull { x ->
+            (coordinate.x - 1 downTo 0).mapNotNull { x ->
                 getValue(Coordinate(x, coordinate.y))
             }
         }
+
         Direction.MidRight -> {
             ((coordinate.x + 1)..maxX()).mapNotNull { x ->
                 getValue(Coordinate(x, coordinate.y))
             }
         }
+
         Direction.TopCenter -> {
-            (coordinate.y -1 downTo 0).mapNotNull { y ->
+            (coordinate.y - 1 downTo 0).mapNotNull { y ->
                 getValue(Coordinate(coordinate.x, y))
             }
         }
+
         else -> null
     }
 }
@@ -103,15 +113,15 @@ fun <T> AoCGrid<T>.print(delimiter: String = ",") {
 }
 
 sealed class Direction(val xModifier: Int, val yModifier: Int) {
-    object TopLeft: Direction(-1,-1)
-    object TopCenter: Direction(0,-1)
-    object TopRight: Direction(1,-1)
-    object MidLeft: Direction(-1, 0)
-    object MidRight: Direction(1, 0)
-    object BottomLeft: Direction(-1, +1)
-    object BottomCenter: Direction(0, +1)
-    object BottomRight: Direction(1, +1)
-    class Relative(xModifier: Int, yModifier: Int): Direction(xModifier, yModifier)
+    object TopLeft : Direction(-1, -1)
+    object TopCenter : Direction(0, -1)
+    object TopRight : Direction(1, -1)
+    object MidLeft : Direction(-1, 0)
+    object MidRight : Direction(1, 0)
+    object BottomLeft : Direction(-1, +1)
+    object BottomCenter : Direction(0, +1)
+    object BottomRight : Direction(1, +1)
+    class Relative(xModifier: Int, yModifier: Int) : Direction(xModifier, yModifier)
 }
 
 fun AoCGrid<Int>.surrounding(coordinate: Coordinate): List<Coordinate> {
@@ -153,17 +163,17 @@ fun AoCGrid<Int>.runStep(): Int {
 fun AoCGrid<Int>.tryFlash(coordinate: Coordinate): Int {
     var flashes = 0
     mutateValue(coordinate) { value ->
-        if(value > 9) {
+        if (value > 9) {
             flashes++
             0
         } else {
             value
         }
     }
-    if(flashes == 1) {
+    if (flashes == 1) {
         surrounding(coordinate).forEach { surroundingCoordinate ->
             mutateValue(surroundingCoordinate) {
-                if(it == 0) it else it + 1
+                if (it == 0) it else it + 1
             }
             flashes += if (getValueOrDefault(surroundingCoordinate, 0) > 9) tryFlash(surroundingCoordinate) else 0
         }
@@ -173,14 +183,14 @@ fun AoCGrid<Int>.tryFlash(coordinate: Coordinate): Int {
 }
 
 sealed interface FoldInstruction {
-    class Horizontal(val axis: Int): FoldInstruction
-    class Vertical(val axis: Int): FoldInstruction
+    class Horizontal(val axis: Int) : FoldInstruction
+    class Vertical(val axis: Int) : FoldInstruction
 
     companion object {
         fun parse(string: String): FoldInstruction {
             val instruction = string.split(' ')[2].split('=')
             val axis = instruction[1].toInt()
-            return if(instruction[0] == "y") {
+            return if (instruction[0] == "y") {
                 Horizontal(axis)
             } else {
                 Vertical(axis)
@@ -190,7 +200,7 @@ sealed interface FoldInstruction {
 }
 
 fun AoCGrid<String>.fold(foldInstruction: FoldInstruction): AoCGrid<String> {
-    return when(foldInstruction) {
+    return when (foldInstruction) {
         is FoldInstruction.Horizontal -> foldHorizontal(foldInstruction.axis)
         is FoldInstruction.Vertical -> foldVertical(foldInstruction.axis)
     }
@@ -201,7 +211,7 @@ fun AoCGrid<String>.foldHorizontal(axis: Int): AoCGrid<String> {
         val opposite = Coordinate(it.x, axis + (axis - it.y))
         val curValue = this.getValue(it)
         val oppositeValue = this.getValue(opposite)
-        if(curValue == "#" || oppositeValue == "#") {
+        if (curValue == "#" || oppositeValue == "#") {
             "#"
         } else {
             "."
@@ -214,7 +224,7 @@ fun AoCGrid<String>.foldVertical(axis: Int): AoCGrid<String> {
         val opposite = Coordinate(axis + (axis - it.x), it.y)
         val curValue = this.getValue(it)
         val oppositeValue = this.getValue(opposite)
-        if(curValue == "#" || oppositeValue == "#") {
+        if (curValue == "#" || oppositeValue == "#") {
             "#"
         } else {
             "."
