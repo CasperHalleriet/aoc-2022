@@ -34,3 +34,4 @@ If you're stuck with Kotlin-specific questions or anything related to this templ
 [Version e](mooie url e)
 [Version f](mooie url f)
 [Version g](mooie url g)
+[bugfix voor f](mooie url g)
