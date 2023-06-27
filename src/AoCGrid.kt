@@ -124,17 +124,19 @@ sealed class Direction(val xModifier: Int, val yModifier: Int) {
     class Relative(xModifier: Int, yModifier: Int) : Direction(xModifier, yModifier)
 }
 
-fun AoCGrid<Int>.surrounding(coordinate: Coordinate): List<Coordinate> {
-    return listOfNotNull(
-        getNewCoordinate(coordinate, Direction.TopLeft),
-        getNewCoordinate(coordinate, Direction.TopCenter),
-        getNewCoordinate(coordinate, Direction.TopRight),
-        getNewCoordinate(coordinate, Direction.MidLeft),
-        getNewCoordinate(coordinate, Direction.MidRight),
-        getNewCoordinate(coordinate, Direction.BottomLeft),
-        getNewCoordinate(coordinate, Direction.BottomCenter),
-        getNewCoordinate(coordinate, Direction.BottomRight)
-    )
+fun <T> AoCGrid<T>.surrounding(coordinate: Coordinate, seesCorners: Boolean = false): List<Coordinate> {
+    return buildList {
+        if (seesCorners) {
+            add(getNewCoordinate(coordinate, Direction.TopLeft))
+            add(getNewCoordinate(coordinate, Direction.TopRight))
+            add(getNewCoordinate(coordinate, Direction.BottomLeft))
+            add(getNewCoordinate(coordinate, Direction.BottomRight))
+        }
+        add(getNewCoordinate(coordinate, Direction.TopCenter))
+        add(getNewCoordinate(coordinate, Direction.MidLeft))
+        add(getNewCoordinate(coordinate, Direction.MidRight))
+        add(getNewCoordinate(coordinate, Direction.BottomCenter))
+    }.filterNotNull()
 }
 
 fun <T> AoCGrid<T>.rowCount(): Int {
